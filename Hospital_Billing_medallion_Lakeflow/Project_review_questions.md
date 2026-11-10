@@ -1,0 +1,64 @@
+# Project Review Questions and Answers
+
+Answers to the eight review questions from the Hospital Billing Medallion case study, written in the context of this project (Lakeflow Spark Declarative Pipelines on Azure Databricks).
+
+# Que 1 : Why do we keep the raw data in Bronze instead of cleaning the file directly?
+Bronze is the system of record for what actually arrived. There are five main reasons to keep data in Bronze :
+
+- Data Preservation : Keep the original data unchanged.
+- Data Recovery : If something goes wrong during cleaning, we can start again from Bronze.
+- Auditability: we can compare original data with transformed data.
+- Reprocessing : If business requirements change, we can apply new cleaning rules without requesting the source file again.
+- Data Traceability : Track where the data came from and how it was transformed.
+
+If we cleaned the source immediately, the original values would be lost, and we could not prove or undo any decision.
+
+# Que 2 : What is the difference between removing a row and putting it in the rejected table?
+- Removing a row : It deletes the invalid record completely, so we may lose the data.
+- Putting it in a Rejected Table : Moves the invalid record into a separate table for future investigation, correction, or auditing.
+
+# Que 3 : Why can bill_id find duplicates but visit_id cannot?
+- bill_id can identify duplicates because each bill have a unique ID. If the same bill_id appears more than once, it may indicate a duplicate bill.
+- visit_id may repeat because one patient visit can generate multiple bills or billing records.
+
+# Que 4 : Why do we use TRIM before INITCAP?
+We use TRIM before INITCAP to remove unwanted spaces from the beginning and end of a string before converting the first letter of each word into uppercase.
+
+Example :
+- Before : "  orthopedics "
+- After TRIM : "orthopedics"
+- After INITCAP : "Orthopedics"
+
+# Que 5 : Why is it OK to fill a blank total_amount with quantity × unit_price?
+It is OK to fill a blank total_amount using quantity * unit_price because we can calculate missing value from existing data.
+
+Example :
+- quantity = 1
+- unit_price = 997.54
+- total_amount = 997.54
+
+This avoids leaving the total_amount NULL and helps maintain complete financial records.
+
+# Que 6 : How does the reconciliation check prove that no row was lost?
+Reconciliation checks ensure that every Bronze row is accounted for after processing.
+
+Here in hospital_billing data;
+we compare, Bronze Rows = Clean Rows + Rejected Rows + Duplicate Rows
+
+if both sides are equal, it means every original record has been classified as clean, rejected, or duplicate, so no row is unaccounted for or lost during ETL processing.
+
+here we have,
+- Bronze Rows : 1.01K
+- Clean Rows : 968
+- Rejected Rows : 22
+- Duplicate Rows : 20
+
+Bronze Rows = 968 + 22 + 20 = 1.01K.
+
+# Que 7 : Why does the dashboard read Gold tables instead of Bronze?
+Dashboards use Gold tables because they contain cleaned, validated, and aggregated, business-ready data.
+whereas, Bronze tables contain raw data, which may have duplicates, missing values, and errors.
+
+# Que 8 : Which dashboard tool did you choose, and why?
+I used Databricks AI/BI Dashboards because it allows me to create interactive dashboards directly within Databricks using Gold tables.
+It helps visualize KPIs, trends, and business insights with filters and charts without moving data to another platform.
